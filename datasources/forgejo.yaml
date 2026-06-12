@@ -1,0 +1,23 @@
+identity:
+  name: forgejo
+  author: shaba
+  label:
+    en_US: Forgejo Repository
+description:
+  en_US: Access Forgejo and Gitea repositories, issues, pull requests and READMEs
+parameters:
+output_schema:
+  type: object
+  properties:
+    page_id:
+      type: string
+      description: page id
+    content:
+      type: string
+      description: page content
+    workspace_id:
+      type: string
+      description: workspace id
+extra:
+  python:
+    source: datasources/forgejo.py

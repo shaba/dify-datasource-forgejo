@@ -1,0 +1,38 @@
+identity:
+  author: shaba
+  name: forgejo
+  label:
+    en_US: Forgejo Repository
+  description:
+    en_US: Access Forgejo and Gitea repositories, issues, pull requests and READMEs
+  icon: icon.svg
+provider_type: online_document
+help:
+  title:
+    en_US: Forgejo/Gitea server URL and a personal access token
+  url:
+    en_US: https://github.com/shaba/dify-datasource-forgejo
+credentials_schema:
+  - name: base_url
+    type: text-input
+    required: true
+    label:
+      en_US: Server URL
+    placeholder:
+      en_US: https://example.com
+    help:
+      en_US: Base URL of your Forgejo or Gitea server (without /api/v1)
+  - name: api_token
+    type: secret-input
+    required: true
+    label:
+      en_US: Personal Access Token
+    placeholder:
+      en_US: your Forgejo/Gitea access token
+    help:
+      en_US: Create a token in your Forgejo/Gitea Settings > Applications > Generate New Token
+datasources:
+  - datasources/forgejo.yaml
+extra:
+  python:
+    source: provider/forgejo.py
