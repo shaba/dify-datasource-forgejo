@@ -14,6 +14,7 @@ from forgejo_client import (
     NotFound,
     redact_credentials,
     build_pages,
+    build_repo_file_pages,
     find_readme_entry,
     get_contents,
     get_issue,
@@ -21,12 +22,37 @@ from forgejo_client import (
     get_pull,
     get_repo,
     get_authenticated_user,
+    parse_extensions,
     parse_page_id,
     render_file,
     render_issue,
     render_pull,
     render_repo,
 )
+
+
+def _as_bool(value: Any) -> bool:
+    """Datasource parameters may arrive as native bool or as strings."""
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _as_int(value: Any, default: int) -> int:
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return default
+
+
+def _split_owner_repo(value: str) -> tuple[str, str]:
+    cleaned = (value or "").strip().strip("/")
+    if "/" not in cleaned:
+        raise ValueError("Repository must be in 'owner/repo' form.")
+    owner, name = cleaned.split("/", 1)
+    if not owner or not name or "/" in name:
+        raise ValueError("Repository must be in 'owner/repo' form.")
+    return owner, name
 
 
 def _redacted(exc: Exception) -> Exception:
@@ -67,7 +93,30 @@ class ForgejoDataSource(OnlineDocumentDatasource):
             workspace_icon = str(user.get("avatar_url") or "")
             workspace_id = str(user.get("id") or login)
 
-            pages = build_pages(base_url, token=token)
+            params = datasource_parameters or {}
+            repository = str(params.get("repository") or "").strip()
+            if repository:
+                # File mode: ingest text files of one repository's tree.
+                owner, name = _split_owner_repo(repository)
+                extensions = parse_extensions(
+                    str(params.get("file_extensions") or ""),
+                    replace=_as_bool(params.get("extensions_replace")),
+                )
+                max_kb = _as_int(params.get("max_file_size_kb"), default=1024)
+                max_bytes = max_kb * 1024 if max_kb > 0 else None
+                pages = build_repo_file_pages(
+                    base_url, owner, name,
+                    extensions=extensions,
+                    ref=str(params.get("ref") or "").strip() or None,
+                    path_prefix=str(params.get("path_prefix") or "").strip(),
+                    max_file_bytes=max_bytes,
+                    include_issues=_as_bool(params.get("include_issues")),
+                    include_pulls=_as_bool(params.get("include_pulls")),
+                    token=token,
+                )
+            else:
+                # Legacy mode: list the token user's repos (repo + README + issues + PRs).
+                pages = build_pages(base_url, token=token)
 
             info = OnlineDocumentInfo(
                 workspace_id=workspace_id,
@@ -92,11 +141,12 @@ class ForgejoDataSource(OnlineDocumentDatasource):
 
             if parsed.kind == "repo":
                 content, title = self._repo_content(base_url, token, parsed.owner,
-                                                     parsed.repo, full_name)
+                                                     parsed.repo, full_name, parsed.ref)
                 page_type = "repository"
             elif parsed.kind == "file":
                 content, title = self._file_content(base_url, token, parsed.owner,
-                                                     parsed.repo, parsed.extra, full_name)
+                                                     parsed.repo, parsed.extra, full_name,
+                                                     parsed.ref)
                 page_type = "file"
             elif parsed.kind == "issue":
                 content, title = self._issue_content(base_url, token, parsed.owner,
@@ -120,22 +170,23 @@ class ForgejoDataSource(OnlineDocumentDatasource):
 
     # --- per-kind fetch + render ------------------------------------------
 
-    def _repo_content(self, base_url, token, owner, repo, full_name):
+    def _repo_content(self, base_url, token, owner, repo, full_name, ref=""):
+        ref = ref or None
         info = get_repo(base_url, owner, repo, token=token)
         try:
-            listing = get_contents(base_url, owner, repo, "", token=token)
+            listing = get_contents(base_url, owner, repo, "", ref=ref, token=token)
             readme = find_readme_entry(listing)
             if readme is not None:
                 readme = get_contents(base_url, owner, repo,
                                       str(readme.get("path") or readme.get("name") or ""),
-                                      token=token)
+                                      ref=ref, token=token)
         except NotFound:
             # A missing README is fine; auth/5xx/transport errors must propagate.
             readme = None
         return render_repo(info, readme, full_name=full_name), info.get("name") or full_name
 
-    def _file_content(self, base_url, token, owner, repo, file_path, full_name):
-        entry = get_contents(base_url, owner, repo, file_path, token=token)
+    def _file_content(self, base_url, token, owner, repo, file_path, full_name, ref=""):
+        entry = get_contents(base_url, owner, repo, file_path, ref=ref or None, token=token)
         if isinstance(entry, list):
             raise ValueError("Can only get content for files, not directories.")
         return (render_file(entry, full_name=full_name, file_path=file_path),

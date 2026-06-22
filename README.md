@@ -1,7 +1,10 @@
 # Forgejo Repository Datasource
 
-A Dify **online document** datasource that ingests Forgejo (and Gitea)
-repositories, READMEs, issues and pull requests into a Dify Knowledge base.
+A Dify **online document** datasource that ingests Forgejo (and Gitea) content
+into a Dify Knowledge base — either an overview of the token user's repositories
+(README + issues + pull requests), or **all text files** of one repository's tree
+(by file extension), which makes it usable as a real documentation/Knowledge
+source rather than just READMEs.
 
 Forgejo is a Gitea fork; both expose the same `<base_url>/api/v1` REST API, so
 this plugin **works with Gitea too** — the shared `/api/v1` surface is used for
@@ -30,6 +33,42 @@ is redacted from error text).
 4. Copy the generated token and paste it into the **Personal Access Token** field.
 
 ## What gets ingested
+
+The datasource has two modes, selected by the **Repository** parameter.
+
+### Repository file mode (set `repository` = `owner/repo`)
+
+Walks the repository tree and exposes **one page per text file** (filtered by
+extension), so an entire docs/man repo becomes Knowledge:
+
+- **File** (`file:{owner}/{name}:{path}`, or `file:{owner}/{name}@{ref}:{path}`
+  on a non-default branch) — the file rendered as Markdown.
+- Optionally **issues** / **pull requests** (off by default).
+
+Parameters (all optional except where noted):
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| **Repository** | — | `owner/repo` to ingest. Empty → user mode (below). |
+| **File extensions** | — | Comma/space-separated, e.g. `.md, .txt, 1, 8`. **Added** to the defaults unless *Replace default extensions* is on. |
+| **Replace default extensions** | `false` | Ingest only the extensions you listed (ignore defaults). |
+| **Branch / tag / commit** (`ref`) | default branch | Git ref to read. |
+| **Path prefix** | — | Restrict to a subtree, e.g. `man/`. |
+| **Max file size (KB)** | `1024` | Skip larger files. `0` = no limit. |
+| **Include issues / pull requests** | `false` | Also ingest issues/PRs. |
+
+Default extensions: `.md .markdown .mdown .mkd .rst .txt .text .adoc .asciidoc
+.org .textile .rdoc .me` (see `DEFAULT_TEXT_EXTENSIONS` in
+`forgejo_client/pages.py`). Each file's **git blob SHA** is stored as the page's
+`last_edited_time` — a precise per-file change marker (note: Dify does not yet
+diff online_document pages on it, so re-syncs currently re-ingest all selected
+files; the SHA is correct provenance and future-proofs incremental sync).
+
+The tree is read via the recursive git-trees API and **paginated**, so large
+repositories (e.g. a man corpus with tens of thousands of files) are not cut off
+at one page.
+
+### User mode (leave `repository` empty)
 
 For the authenticated user's repositories (from `/api/v1/user/repos`, paginated),
 the datasource exposes these pages:
@@ -63,8 +102,10 @@ whose max page size is below the per-repo cap will return fewer items.
 
 - `GET /api/v1/user` — authenticated user (workspace label, credential check)
 - `GET /api/v1/user/repos` — the user's repositories (paginated)
-- `GET /api/v1/repos/{owner}/{repo}` — repository metadata
-- `GET /api/v1/repos/{owner}/{repo}/contents[/{path}]` — repo root listing,
+- `GET /api/v1/repos/{owner}/{repo}` — repository metadata (and default branch)
+- `GET /api/v1/repos/{owner}/{repo}/git/trees/{ref}?recursive=true` — repository
+  file tree (file mode), paginated
+- `GET /api/v1/repos/{owner}/{repo}/contents[/{path}]?ref=` — repo root listing,
   README detection and file contents
 - `GET /api/v1/repos/{owner}/{repo}/issues?state=all&type=issues` — issues
 - `GET /api/v1/repos/{owner}/{repo}/issues/{n}` and `/{n}/comments` — issue + comments

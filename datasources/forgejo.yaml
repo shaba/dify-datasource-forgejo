@@ -4,8 +4,86 @@ identity:
   label:
     en_US: Forgejo Repository
 description:
-  en_US: Access Forgejo and Gitea repositories, issues, pull requests and READMEs
+  en_US: "Access Forgejo and Gitea repositories: ingest repository text files (by extension), READMEs, issues and pull requests"
 parameters:
+  - name: repository
+    type: string
+    required: false
+    label:
+      en_US: Repository (owner/repo)
+    description:
+      en_US: >-
+        Ingest text files from this single repository's tree (e.g. "alt-ai/man").
+        Leave empty to instead list the token user's repositories (repo overview +
+        README + issues + pull requests).
+    form: form
+  - name: file_extensions
+    type: string
+    required: false
+    label:
+      en_US: File extensions
+    description:
+      en_US: >-
+        Comma/space-separated extensions to ingest in repository mode, e.g.
+        ".md, .txt, 1, 8". Added to the defaults (.md, .markdown, .rst, .txt,
+        .adoc, .org, ...) unless "Replace default extensions" is on.
+    form: form
+  - name: extensions_replace
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: Replace default extensions
+    description:
+      en_US: >-
+        When on, ingest ONLY the extensions listed above (ignore the built-in
+        defaults). When off (default), your extensions are added to the defaults.
+    form: form
+  - name: ref
+    type: string
+    required: false
+    label:
+      en_US: Branch / tag / commit
+    description:
+      en_US: Git ref to read in repository mode. Empty = the repository's default branch.
+    form: form
+  - name: path_prefix
+    type: string
+    required: false
+    label:
+      en_US: Path prefix
+    description:
+      en_US: >-
+        Restrict ingestion to this subtree, e.g. "man/" or "docs/". Empty = whole
+        repository.
+    form: form
+  - name: max_file_size_kb
+    type: number
+    required: false
+    default: 1024
+    label:
+      en_US: Max file size (KB)
+    description:
+      en_US: Skip files larger than this many kilobytes. 0 = no limit.
+    form: form
+  - name: include_issues
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: Include issues
+    description:
+      en_US: Also ingest issues of the repository (repository mode).
+    form: form
+  - name: include_pulls
+    type: boolean
+    required: false
+    default: false
+    label:
+      en_US: Include pull requests
+    description:
+      en_US: Also ingest pull requests of the repository (repository mode).
+    form: form
 output_schema:
   type: object
   properties:

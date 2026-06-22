@@ -75,6 +75,55 @@ def get_contents(base_url: str, owner: str, repo: str, path: str = "", *,
                    fetch=fetch, timeout=timeout)
 
 
+def get_tree(base_url: str, owner: str, repo: str, ref: str, *,
+             recursive: bool = True, page: int = 1, per_page: int = 1000,
+             token: str | None = None, fetch: Fetch = default_fetch,
+             timeout: int = 30) -> Any:
+    """One page of the git-trees listing for ``ref`` (a branch name or commit sha).
+
+    Forgejo/Gitea resolve a branch name in the ``{sha}`` slot, so the caller can
+    pass the default branch directly.
+    """
+    return request(
+        base_url, "GET",
+        f"repos/{seg(owner)}/{seg(repo)}/git/trees/{seg(ref)}",
+        params={"recursive": "true" if recursive else None,
+                "page": page, "per_page": per_page},
+        token=token, fetch=fetch, timeout=timeout,
+    )
+
+
+def list_tree_blobs(base_url: str, owner: str, repo: str, ref: str, *,
+                    token: str | None = None, fetch: Fetch = default_fetch,
+                    timeout: int = 30, per_page: int = 1000,
+                    max_pages: int = 1000) -> list[dict[str, Any]]:
+    """All blob (file) entries of ``ref`` via the recursive git-trees API.
+
+    Gitea/Forgejo paginate the recursive tree and report ``total_count`` (and set
+    ``truncated`` on the first page when there is more): we page until we've seen
+    ``total_count`` entries or a page comes back empty, so a large tree (e.g. a man
+    corpus with tens of thousands of files) isn't silently cut off at one page.
+    Each returned entry carries ``path``, ``sha`` and ``size``.
+    """
+    blobs: list[dict[str, Any]] = []
+    entries_seen = 0
+    page = 1
+    while page <= max_pages:
+        data = get_tree(base_url, owner, repo, ref, recursive=True, page=page,
+                        per_page=per_page, token=token, fetch=fetch, timeout=timeout)
+        tree = data.get("tree") if isinstance(data, dict) else None
+        batch = [e for e in (tree or []) if isinstance(e, dict)]
+        if not batch:
+            break
+        entries_seen += len(batch)
+        blobs.extend(e for e in batch if e.get("type") == "blob")
+        total = data.get("total_count") if isinstance(data, dict) else None
+        if total is None or entries_seen >= int(total):
+            break
+        page += 1
+    return blobs
+
+
 def find_readme_entry(listing: Any) -> dict[str, Any] | None:
     """Pick a README entry from a repo-root directory listing, or None."""
     if not isinstance(listing, list):
