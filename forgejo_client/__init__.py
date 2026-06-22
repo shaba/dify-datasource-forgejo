@@ -10,8 +10,11 @@ The datasource and provider classes are thin adapters that import from here.
 from .errors import ApiError, ForgejoError, NotFound, redact_credentials
 from .http import Fetch, default_fetch, request
 from .pages import (
+    DEFAULT_TEXT_EXTENSIONS,
     PageCap,
     build_pages,
+    build_repo_file_pages,
+    parse_extensions,
     parse_page_id,
 )
 from .repos import (
@@ -20,7 +23,9 @@ from .repos import (
     get_authenticated_user,
     get_contents,
     get_repo,
+    get_tree,
     get_version,
+    list_tree_blobs,
     list_user_repos,
 )
 from .content import (
@@ -46,15 +51,20 @@ __all__ = [
     "Fetch",
     "default_fetch",
     "request",
+    "DEFAULT_TEXT_EXTENSIONS",
     "PageCap",
     "build_pages",
+    "build_repo_file_pages",
+    "parse_extensions",
     "parse_page_id",
     "decode_file_content",
     "find_readme_entry",
     "get_authenticated_user",
     "get_contents",
     "get_repo",
+    "get_tree",
     "get_version",
+    "list_tree_blobs",
     "list_user_repos",
     "render_file",
     "render_issue",

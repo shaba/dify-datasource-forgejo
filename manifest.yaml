@@ -6,7 +6,7 @@ repo: https://github.com/shaba/dify-datasource-forgejo
 label:
   en_US: Forgejo Repository
 description:
-  en_US: "Access Forgejo and Gitea repositories, issues, pull requests and READMEs"
+  en_US: "Access Forgejo and Gitea repositories: ingest repository text files (by extension), READMEs, issues and pull requests"
 icon: icon.svg
 tags:
   - rag
