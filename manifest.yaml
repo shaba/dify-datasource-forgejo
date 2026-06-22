@@ -1,4 +1,4 @@
-version: 0.0.1
+version: 0.0.2
 type: plugin
 author: shaba
 name: forgejo_datasource
@@ -21,7 +21,7 @@ plugins:
   datasources:
     - provider/forgejo.yaml
 meta:
-  version: 0.0.1
+  version: 0.0.2
   arch:
     - amd64
     - arm64
