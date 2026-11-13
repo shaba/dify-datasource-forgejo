@@ -90,7 +90,7 @@ def test_default_fetch_passes_no_redirects_and_timeout(monkeypatch):
         return _Resp()
 
     monkeypatch.setattr(requests, "request", fake_request)
-    status, data = default_fetch("GET", "https://git.example.com/api/v1/user",
+    status, _data = default_fetch("GET", "https://git.example.com/api/v1/user",
                                  token="t", timeout=0)
     assert status == 200
     assert captured["allow_redirects"] is False

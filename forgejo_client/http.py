@@ -8,7 +8,8 @@ transport uses ``requests`` with the Forgejo token auth header
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 from urllib.parse import quote, urlencode, urlsplit
 
 import requests

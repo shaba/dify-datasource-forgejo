@@ -12,18 +12,18 @@ from dify_plugin.interfaces.datasource.online_document import OnlineDocumentData
 from forgejo_client import (
     ForgejoError,
     NotFound,
-    redact_credentials,
     build_pages,
     build_repo_file_pages,
     find_readme_entry,
+    get_authenticated_user,
     get_contents,
     get_issue,
     get_issue_comments,
     get_pull,
     get_repo,
-    get_authenticated_user,
     parse_extensions,
     parse_page_id,
+    redact_credentials,
     render_file,
     render_issue,
     render_pull,
@@ -188,7 +188,9 @@ class ForgejoDataSource(OnlineDocumentDatasource):
     def _file_content(self, base_url, token, owner, repo, file_path, full_name, ref=""):
         entry = get_contents(base_url, owner, repo, file_path, ref=ref or None, token=token)
         if isinstance(entry, list):
-            raise ValueError("Can only get content for files, not directories.")
+            raise ValueError(  # noqa: TRY004 — the path is a valid value that
+                # points to a directory, not an argument of a wrong type.
+            "Can only get content for files, not directories.")
         return (render_file(entry, full_name=full_name, file_path=file_path),
                 entry.get("name") or file_path)
 

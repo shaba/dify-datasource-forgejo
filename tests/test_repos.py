@@ -39,7 +39,7 @@ def test_list_user_repos_paginates_when_server_page_size_below_per_page():
     # Server clamps each page to 10 items even though we request limit=50.
     # The walk must NOT stop on the first short page; it stops on an empty page.
     fetch, api = make_fetch({
-        "page=1": (200, [_repo(i) for i in range(0, 10)]),
+        "page=1": (200, [_repo(i) for i in range(10)]),
         "page=2": (200, [_repo(i) for i in range(10, 20)]),
         "page=3": (200, [_repo(i) for i in range(20, 25)]),
         "page=4": (200, []),
@@ -52,7 +52,7 @@ def test_list_user_repos_paginates_when_server_page_size_below_per_page():
 def test_list_user_repos_small_pages_respects_cap():
     # 10 items/page, cap 25 -> exactly 25, stops once the cap is reached.
     fetch, _ = make_fetch({
-        "page=1": (200, [_repo(i) for i in range(0, 10)]),
+        "page=1": (200, [_repo(i) for i in range(10)]),
         "page=2": (200, [_repo(i) for i in range(10, 20)]),
         "page=3": (200, [_repo(i) for i in range(20, 30)]),
     })

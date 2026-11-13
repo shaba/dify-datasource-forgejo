@@ -66,7 +66,7 @@ def render_issue(issue: dict[str, Any], comments: list[dict[str, Any]],
     lines.append(f"**Updated:** {issue.get('updated_at', '')}")
     if issue.get("html_url"):
         lines.append(f"**URL:** {issue.get('html_url')}")
-    labels = [str((label_obj.get("name") or "")).strip()
+    labels = [str(label_obj.get("name") or "").strip()
               for label_obj in (issue.get("labels") or []) if isinstance(label_obj, dict)]
     labels = [label for label in labels if label]
     if labels:
