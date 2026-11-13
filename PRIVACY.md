@@ -10,6 +10,8 @@ that **you** configure and reads data from it on your behalf.
 - The list of repositories your token can access (`/api/v1/user/repos`).
 - Repository metadata, README files, issues and pull requests (with their
   comments) for the repositories you choose to ingest.
+- Text files from the repository tree (for example Markdown, reStructuredText
+  or manual pages) when a repository is configured for file ingestion.
 
 This data is fetched only when the Dify Knowledge base triggers a sync, and is
 passed to Dify for indexing into your Knowledge base.
