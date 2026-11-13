@@ -1,5 +1,7 @@
 # Forgejo Repository Datasource
 
+Source repository: <https://github.com/shaba/dify-datasource-forgejo>
+
 A Dify **online document** datasource that ingests Forgejo (and Gitea) content
 into a Dify Knowledge base — either an overview of the token user's repositories
 (README + issues + pull requests), or **all text files** of one repository's tree

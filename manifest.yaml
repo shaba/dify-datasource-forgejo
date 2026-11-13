@@ -3,6 +3,7 @@ type: plugin
 author: shaba
 name: forgejo_datasource
 repo: https://github.com/shaba/dify-datasource-forgejo
+contact: shaba@altlinux.org
 label:
   en_US: Forgejo Repository
 description:
