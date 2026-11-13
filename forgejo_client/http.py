@@ -20,7 +20,7 @@ from .errors import ApiError, NotFound, redact_credentials
 # parsed_body is the decoded JSON, or the raw text if the body is not JSON.
 Fetch = Callable[..., "tuple[int, Any]"]
 
-USER_AGENT = "dify-datasource-forgejo/0.0.2"
+USER_AGENT = "dify-datasource-forgejo/0.0.3"
 
 
 def default_fetch(

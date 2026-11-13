@@ -1,6 +1,6 @@
 [project]
 name = "dify-datasource-forgejo"
-version = "0.0.1"
+version = "0.0.3"
 description = "Ingest Forgejo and Gitea repositories, issues, pull requests and READMEs into a Knowledge base"
 readme = "README.md"
 requires-python = ">=3.12"
